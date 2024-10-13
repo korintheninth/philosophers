@@ -6,7 +6,7 @@
 
 typedef struct philo
 {
-	int lasteat;
+	long long int lasteat;
 	int num;
 	int eat;
 	int sleep;
@@ -32,7 +32,7 @@ typedef struct warden
 void writeinf(char *str, int num, pthread_mutex_t *writelock)
 {
 	struct timeval currentTime;
-	int curinms;
+	long long int curinms;
 	
 	gettimeofday(&currentTime, NULL);
 	curinms = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
@@ -47,16 +47,15 @@ void *philosopher(void *arg)
 
 	self = (t_philo*)arg;
 	struct timeval currentTime;
-	int curinms;
+	long long int curinms;
 	
 	while (*self->running)
 	{
 		pthread_mutex_lock(self->rightFork);
-		writeinf("philosopher %d grabbed a fork. Timestamp: %d", self->num, self->writeLock);
+		writeinf("philosopher %d grabbed a fork. Timestamp: %lld\n", self->num, self->writeLock);
 		pthread_mutex_lock(self->leftFork);
-		write(1,"1", 1);
-		writeinf("philosopher %d grabbed a fork. Timestamp: %d", self->num, self->writeLock);
-		writeinf("philosopher %d eating. Timestamp: %d", self->num, self->writeLock);
+		writeinf("philosopher %d grabbed a fork. Timestamp: %lld\n", self->num, self->writeLock);
+		writeinf("philosopher %d eating. Timestamp: %lld\n", self->num, self->writeLock);
 		pthread_mutex_lock(&self->eatLock);
 		gettimeofday(&currentTime, NULL);
 		curinms = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
@@ -65,9 +64,9 @@ void *philosopher(void *arg)
 		usleep(self->eat);
 		pthread_mutex_unlock(self->rightFork);
 		pthread_mutex_unlock(self->leftFork);
-		writeinf("philosopher %d sleeping. Timestamp: %d", self->num,  self->writeLock);
+		writeinf("philosopher %d sleeping. Timestamp: %lld\n", self->num,  self->writeLock);
 		usleep(self->sleep);
-		writeinf("philosopher %d thinking. Timestamp: %d", self->num, self->writeLock);
+		writeinf("philosopher %d thinking. Timestamp: %lld\n", self->num, self->writeLock);
 		usleep(self->think);
 	}
 	return (NULL);
@@ -79,7 +78,7 @@ void *wardenfn(void *arg)
 	int running;
 	int i;
 	struct timeval currentTime;
-	int curinms;
+	long long int curinms;
 
 	warden = (t_warden*)arg;
 	while (*warden->running)
@@ -88,11 +87,11 @@ void *wardenfn(void *arg)
 		while (warden->philos[i] != NULL)
 		{
 			gettimeofday(&currentTime, NULL);
-			curinms = currentTime.tv_sec * 1000 + currentTime.tv_usec/1000;
+			curinms = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
 			pthread_mutex_lock(&warden->philos[i]->eatLock);
 			if (curinms - warden->philos[i]->lasteat > warden->deathTime)
 			{
-				writeinf("Philosopher %d died. Timestamp: %d", i, warden->writeLock);
+				writeinf("Philosopher %d died. Timestamp: %lld\n", i, warden->writeLock);
 				warden->running = 0;
 			}
 			pthread_mutex_unlock(&warden->philos[i]->eatLock);
@@ -104,14 +103,14 @@ void *wardenfn(void *arg)
 
 int main(void)
 {
-	int numberofp = 5;
-	int eat = 50;
-	int sleep = 50;
-	int think = 50;
-	int deathTime = 160;
+	const int numberofp = 5;
+	int eat = 2000000;
+	int sleep = 5000000;
+	int think = 5000000;
+	int deathTime = 1200;
 	int running = 1;
 	struct timeval currentTime;
-	int curinms;
+	long long int curinms;
 	pthread_mutex_t writelock;
 	
 	t_philo **philos = malloc(sizeof(t_philo*) * (numberofp + 1));
@@ -121,7 +120,10 @@ int main(void)
 	philos[numberofp] = NULL;
 	int i = 0;
 	while (i < numberofp)
-		pthread_mutex_init(&forks[i++], NULL);
+	{
+		pthread_mutex_init(&forks[i], NULL);
+		i++;
+	}
 	i = 0;
 	while (i < numberofp)
 	{
@@ -144,6 +146,7 @@ int main(void)
 	while (i < numberofp)
 	{
 		pthread_create(&philos[i]->philosopher, NULL, philosopher, (void*)philos[i]);
+		usleep(1);
 		i++;
 	}
 	t_warden warden;
