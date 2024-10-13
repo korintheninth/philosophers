@@ -84,7 +84,7 @@ void *wardenfn(void *arg)
 	while (*warden->running)
 	{
 		i = 0;
-		while (warden->philos[i] != NULL)
+		while (warden->philos[i] != NULL && *warden->running)
 		{
 			gettimeofday(&currentTime, NULL);
 			curinms = currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000;
